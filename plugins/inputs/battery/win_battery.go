@@ -101,7 +101,7 @@ func GetBattery(platform string) Battery {
 		if err == nil {
 			ftemperature := math.Round(temperature)
 			if batterystruct.Voltage != "0" && batterystruct.Voltage != "" {
-				batterystruct.Temperature = fmt.Sprintf("%.2f℃", ftemperature)
+				batterystruct.Temperature = fmt.Sprintf("%.2f", ftemperature)
 			}
 		}
 	}

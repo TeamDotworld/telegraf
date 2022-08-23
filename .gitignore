@@ -12,3 +12,4 @@ process.yml
 /*.conf
 resource.syso
 versioninfo.json
+/telegraf_arm

@@ -95,7 +95,10 @@ func (ms *MemStats) Gather(acc telegraf.Accumulator) error {
 		fields["write_back"] = vm.WriteBack
 	}
 
-	acc.AddGauge("mem", fields, nil)
+	// acc.AddGauge("mem", fields, nil)
+	acc.AddFields("mem", fields, map[string]string{
+		"source": "mem",
+	})
 
 	return nil
 }
