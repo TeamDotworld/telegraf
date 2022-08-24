@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
@@ -34,10 +33,6 @@ func (wifi *WiFi) Description() string {
 	return "WiFi go-plugin for Telegraf"
 }
 func (wifi *WiFi) Gather(acc telegraf.Accumulator) error {
-	host, err := os.Hostname()
-	if err != nil {
-		return err
-	}
 	platform := GETPLATFORM()
 	if platform == "android" {
 		getConnectedWifi, err := exec.Command("dumpsys", "wifi").Output()
@@ -142,9 +137,7 @@ func (wifi *WiFi) Gather(acc telegraf.Accumulator) error {
 		"network_id":        wifi.NetworkID,
 		"wifi_mac":          wifi.WifiMAC,
 		"connected_wifi_ip": wifi.ConnectedWifiIP,
-	}, map[string]string{
-		"host": host,
-	})
+	}, map[string]string{})
 	return nil
 }
 func GetOutboundIP() net.IP {

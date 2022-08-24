@@ -2,7 +2,6 @@ package androidapps
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -32,11 +31,6 @@ func (apps *Androidapp) Description() string {
 }
 
 func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
-
-	host, err := os.Hostname()
-	if err != nil {
-		return err
-	}
 	if GETPLATFORM() == "android" {
 		app_list := GetUserInstalledApplication(acc)
 		for _, app := range app_list {
@@ -63,10 +57,7 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				"version_name":      apps.VersionName,
 				"data_dir":          apps.DataDir,
 				"is_user_installed": apps.UserInstall,
-			}, map[string]string{
-				"source": host,
-				"data":   "apps",
-			})
+			}, map[string]string{})
 			apps.AppName = ""
 		}
 	} else {

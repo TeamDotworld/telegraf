@@ -37,10 +37,6 @@ func (battery *Battery) Description() string {
 
 func (battery *Battery) Gather(acc telegraf.Accumulator) error {
 	platform := GETPLATFORM()
-	host, err := os.Hostname()
-	if err != nil {
-		return err
-	}
 	batteries := GetBattery(platform)
 
 	acc.AddFields("battery",
@@ -52,9 +48,7 @@ func (battery *Battery) Gather(acc telegraf.Accumulator) error {
 			"technology":  batteries.Technology,
 			"temperature": batteries.Temperature,
 			"voltage":     batteries.Voltage,
-		}, map[string]string{
-			"source": host,
-		})
+		}, map[string]string{})
 	return nil
 }
 

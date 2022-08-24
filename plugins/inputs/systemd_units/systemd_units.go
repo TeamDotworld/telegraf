@@ -149,12 +149,7 @@ func (s *SystemdUnits) Gather(acc telegraf.Accumulator) error {
 		load := data[1]
 		active := data[2]
 		sub := data[3]
-		tags := map[string]string{
-			"name":   name,
-			"load":   load,
-			"active": active,
-			"sub":    sub,
-		}
+		tags := map[string]string{}
 
 		var (
 			loadCode   int
@@ -178,6 +173,10 @@ func (s *SystemdUnits) Gather(acc telegraf.Accumulator) error {
 			"load_code":   loadCode,
 			"active_code": activeCode,
 			"sub_code":    subCode,
+			"name":        name,
+			"load":        load,
+			"active":      active,
+			"sub":         sub,
 		}
 
 		acc.AddFields(measurement, fields, tags)
