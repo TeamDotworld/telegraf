@@ -1,10 +1,12 @@
 package wifi
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
@@ -80,7 +82,7 @@ func (wifi *WiFi) Gather(acc telegraf.Accumulator) error {
 				wifi.WifiMAC = ifa.HardwareAddr.String()
 			}
 		}
-		wifi.NetworkID = SystemMeta("/sys/class/net/" + iface + "/netdev_group")
+		wifi.NetworkID = ReadTxtFile("/sys/class/net/" + iface + "/netdev_group")
 		// Access Point MAC Address
 		bssid, err := exec.Command("iwgetid", "-a").Output()
 		if err != nil {
@@ -187,16 +189,6 @@ func VerifyAppInstalled(pkg string) bool {
 	return output
 }
 
-func SystemMeta(path string) string {
-	GetData, err := exec.Command("cat", path).Output()
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	Data := strings.TrimSuffix(string(GetData), "\n")
-	return Data
-}
-
 func GetInterface() string {
 	intf, err := NetworkInterfaces()
 	if err != nil {
@@ -235,4 +227,19 @@ func init() {
 	inputs.Add("wifi", func() telegraf.Input {
 		return &WiFi{}
 	})
+}
+
+func ReadTxtFile(path string) string {
+	file, err := os.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer file.Close()
+
+	var content string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		content += strings.TrimSpace(scanner.Text())
+	}
+	return content
 }

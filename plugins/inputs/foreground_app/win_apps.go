@@ -45,3 +45,10 @@ func GetWindow(funcName string) uintptr {
 	hwnd, _, _ := proc.Call()
 	return hwnd
 }
+func GetLinuxForegoundApp() string {
+	return ""
+}
+
+func AndroidForegroundApp() string {
+	return ""
+}

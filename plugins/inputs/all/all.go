@@ -36,6 +36,7 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/inputs/cpu"
 	_ "github.com/influxdata/telegraf/plugins/inputs/csgo"
 	_ "github.com/influxdata/telegraf/plugins/inputs/dcos"
+	_ "github.com/influxdata/telegraf/plugins/inputs/device_master"
 	_ "github.com/influxdata/telegraf/plugins/inputs/directory_monitor"
 	_ "github.com/influxdata/telegraf/plugins/inputs/disk"
 	_ "github.com/influxdata/telegraf/plugins/inputs/diskio"
