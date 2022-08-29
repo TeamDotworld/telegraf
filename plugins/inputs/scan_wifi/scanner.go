@@ -54,7 +54,9 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"timestamp":            list.NetworkTime,
 					"venue_name":           list.VenueName,
 					"signal_quality":       list.Quality,
-				}, map[string]string{})
+				}, map[string]string{
+					"ssid": list.ESSID,
+				})
 			}
 		}
 	case "android":
@@ -74,7 +76,9 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"timestamp":            list.NetworkTime,
 					"venue_name":           list.VenueName,
 					"signal_quality":       list.Quality,
-				}, map[string]string{})
+				}, map[string]string{
+					"ssid": list.ESSID,
+				})
 			}
 		}
 	case "windows":
@@ -91,7 +95,9 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"level":         list.RSSI,
 					"ssid":          list.SSID,
 					"timestamp":     list.NetworkTime,
-				}, map[string]string{})
+				}, map[string]string{
+					"ssid": list.SSID,
+				})
 			}
 		}
 	}

@@ -67,9 +67,12 @@ func GetBattery(platform string) Battery {
 
 			if Battery_level > 90 {
 				Health = "GOOD"
+			} else if Battery_level < 10 {
+				Health = "Critical"
 			} else {
 				Health = "NORMAL"
 			}
+
 			Battery_technology = SystemMeta("/sys/class/power_supply/BAT0/technology")
 			battery_voltage_t, _ := strconv.Atoi(SystemMeta("/sys/class/power_supply/BAT0/voltage_now"))
 			battery_status_t := SystemMeta("/sys/class/power_supply/BAT0/status")

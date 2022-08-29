@@ -106,7 +106,9 @@ func (e *DockerContainer) Gather(acc telegraf.Accumulator) error {
 				"data_dir":       Mounts,
 				"package_name":   ImageName,
 				"version":        Version,
-			}, map[string]string{})
+			}, map[string]string{
+				"name": s.Name,
+			})
 		}
 	}
 	return nil
