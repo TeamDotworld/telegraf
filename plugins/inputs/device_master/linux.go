@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -87,7 +88,6 @@ func LinuxSystemMetrics() DeviceMaster {
 	oprelease, _ := Read()
 	all_metrics.Other.OsVersion = oprelease["VERSION"]
 	all_metrics.Other.OsRelease = oprelease["PRETTY_NAME"]
-	all_metrics.Other.OperatingSystem = runtime.GOOS
 	conint, _ := exec.Command("grep", "-c", "processor", "/proc/cpuinfo").Output()
 	conv := strings.TrimSuffix(string(string(conint)), "\n")
 	all_metrics.Other.TotolProcessor, _ = strconv.Atoi(string(conv))
@@ -138,5 +138,20 @@ func LinuxSystemMetrics() DeviceMaster {
 			}
 		}
 	}
+	var uname syscall.Utsname
+	if err := syscall.Uname(&uname); err == nil {
+		all_metrics.Other.OperatingSystem = int8ToStr(uname.Machine[:])
+	}
 	return all_metrics
+}
+
+func int8ToStr(arr []int8) string {
+	b := make([]byte, 0, len(arr))
+	for _, v := range arr {
+		if v == 0x00 {
+			break
+		}
+		b = append(b, byte(v))
+	}
+	return string(b)
 }

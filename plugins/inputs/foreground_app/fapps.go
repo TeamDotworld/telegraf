@@ -5,10 +5,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/plugins/inputs"
@@ -34,13 +36,19 @@ func (e *ForegroundApp) Description() string {
 }
 
 func (fapps *ForegroundApp) Gather(acc telegraf.Accumulator) error {
-	var app string
+	var (
+		app            string
+		is_interactive bool
+		blestate       bool
+	)
 	platform := GETPLATFORM()
 	if platform == "linux" {
 		SetEnvironment()
 		app = GetLinuxForegoundApp()
+		blestate = LinuxBleStatus()
 	} else if platform == "android" {
 		app = AndroidForegroundApp()
+		blestate = AndroidBleState()
 	} else if platform == "windows" {
 		if hwnd := GetWindow("GetForegroundWindow"); hwnd != 0 {
 			app = GetWindowText(HWND(hwnd))
@@ -48,14 +56,58 @@ func (fapps *ForegroundApp) Gather(acc telegraf.Accumulator) error {
 			app = "none"
 		}
 	}
-	acc.AddFields("foreground_app", map[string]interface{}{
-		"current_foreground_application": app,
-	}, map[string]string{
-		"service":  "get_current_foreground_application",
-		"platform": platform,
-	})
+	if app != "" {
+		is_interactive = true
+	} else {
+		is_interactive = false
+	}
+
+	acc.AddFields("general_info", map[string]interface{}{
+		"is_interactive":                 is_interactive,
+		"Current_foreground_application": app,
+		"ble_state":                      blestate,
+		"logged":                         time.Now().Format(time.RFC3339),
+	}, map[string]string{})
 	return nil
 }
+
+func LinuxBleStatus() bool {
+	cmd, err := exec.Command("hcitool", "dev").Output()
+	if err == nil {
+		reg_mac := regexp.MustCompile(`[0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}`)
+		if reg_mac.MatchString(string(cmd)) {
+			return true
+		}
+	}
+	return false
+}
+
+func AndroidBleState() bool {
+	cmd, err := exec.Command("settings", "list", "global").Output()
+	if err == nil {
+		splitline := strings.Split(string(cmd), " ")
+		for _, line := range splitline {
+			if strings.Contains(line, "bluetooth_on") {
+				ref := regexp.MustCompile(`[1]`)
+				if ref.MatchString(string(cmd)) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func WindowsBleState() bool {
+	cmd, err := exec.Command("sc", "query", "bthserv").Output()
+	if err == nil {
+		if strings.Contains(string(cmd), "RUNNING") {
+			return true
+		}
+	}
+	return false
+}
+
 func GETPLATFORM() string {
 	var OS_TYPE string
 	if runtime.GOOS == "linux" {

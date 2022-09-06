@@ -69,6 +69,7 @@ type OTHERS struct {
 	GLVersion        string
 	OtgSupport       bool
 	Kernal           string
+	Type             string
 }
 
 type DeviceMaster struct {
