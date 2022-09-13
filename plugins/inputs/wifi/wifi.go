@@ -139,7 +139,9 @@ func (wifi *WiFi) Gather(acc telegraf.Accumulator) error {
 		"network_id":        wifi.NetworkID,
 		"wifi_mac":          wifi.WifiMAC,
 		"connected_wifi_ip": wifi.ConnectedWifiIP,
-	}, map[string]string{})
+	}, map[string]string{
+		"wifi": "connected",
+	})
 	return nil
 }
 func GetOutboundIP() net.IP {

@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	netg "net"
 	"net/http"
 	_ "net/http/pprof" // Comment this line to disable pprof endpoint.
 	"os"
@@ -357,6 +358,19 @@ func formatFullVersion() string {
 }
 
 func main() {
+	// Network resolver for android devices
+	var dialer netg.Dialer
+	netg.DefaultResolver = &netg.Resolver{
+		PreferGo: false,
+		Dial: func(context context.Context, network, _ string) (netg.Conn, error) {
+			conn, err := dialer.DialContext(context, network, "8.8.8.8:53")
+			if err != nil {
+				return nil, err
+			}
+			return conn, nil
+		},
+	}
+
 	flag.Var(&fConfigs, "config", "configuration file to load")
 	flag.Var(&fConfigDirs, "config-directory", "directory containing additional *.conf files")
 

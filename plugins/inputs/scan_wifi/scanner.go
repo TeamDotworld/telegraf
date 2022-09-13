@@ -50,7 +50,6 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"frequency":            list.Frequency,
 					"is_passpoint_network": list.EncryptionKey,
 					"level":                list.SignalLevel,
-					"ssid":                 list.ESSID,
 					"timestamp":            list.NetworkTime,
 					"venue_name":           list.VenueName,
 					"signal_quality":       list.Quality,
@@ -72,7 +71,6 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"frequency":            list.Frequency,
 					"is_passpoint_network": list.EncryptionKey,
 					"level":                list.SignalLevel,
-					"ssid":                 list.ESSID,
 					"timestamp":            list.NetworkTime,
 					"venue_name":           list.VenueName,
 					"signal_quality":       list.Quality,
@@ -93,7 +91,6 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"channel_width": list.Channel,
 					"frequency":     list.Frequency,
 					"level":         list.RSSI,
-					"ssid":          list.SSID,
 					"timestamp":     list.NetworkTime,
 				}, map[string]string{
 					"ssid": list.SSID,

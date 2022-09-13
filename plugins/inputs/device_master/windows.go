@@ -333,3 +333,7 @@ func GetWin32DesktopMonitor() []Win32_DesktopMonitor {
 	wmi_win.Query(q, &dstDesktopMonitor)
 	return dstDesktopMonitor
 }
+
+func LinuxSystemMetrics() DeviceMaster {
+	return DeviceMaster{}
+}

@@ -42,7 +42,7 @@ func (ip *IP_Universe) Gather(acc telegraf.Accumulator) error {
 						"ip":               a.String(),
 						"mtu":              i.MTU,
 					}, map[string]string{
-						"interface_type": i.Name + interface_type,
+						"interface_type": i.Name + "-" + interface_type,
 					})
 				}
 			}

@@ -135,7 +135,7 @@ func andparse(input string, interfaceName string) (cells []AndroidCell, err erro
 					wificell.ESSID = "Unidentified"
 				} else if strings.Contains(strings.Fields(line)[1], "\\x") {
 					emoji, _ := hex.DecodeString(strings.Replace(strings.Fields(line)[1], "\\x", "", -1))
-					wificell.ESSID = fmt.Sprintln(strings.ReplaceAll(string(emoji), "\n", ""))
+					wificell.ESSID = strings.ReplaceAll(string(emoji), "\n", "")
 				} else {
 					wificell.ESSID = strings.Fields(line)[1]
 				}

@@ -57,8 +57,9 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				"version_name":      apps.VersionName,
 				"data_dir":          apps.DataDir,
 				"is_user_installed": apps.UserInstall,
-			}, map[string]string{})
-			apps.AppName = ""
+			}, map[string]string{
+				"name": apps.PackageName,
+			})
 		}
 	} else {
 		acc.AddError(fmt.Errorf("this plugin only supported on android device."))

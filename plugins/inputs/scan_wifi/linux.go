@@ -2,7 +2,6 @@ package scanwifi
 
 import (
 	"encoding/hex"
-	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
@@ -102,10 +101,10 @@ func compare(line string, wg *sync.WaitGroup, m *sync.Mutex, cell *AvailableWifi
 						cell.ESSID = "Unidentified"
 					} else {
 						emoji, _ := hex.DecodeString(strings.Replace(values[i], "\\x", "", -1))
-						cell.ESSID = fmt.Sprintln(strings.TrimSuffix(string(emoji), "\n"))
+						cell.ESSID = strings.ReplaceAll(string(emoji), "\n", "")
 					}
 				} else {
-					cell.ESSID = values[i]
+					cell.ESSID = strings.ReplaceAll(values[i], "\n", "")
 				}
 				now := time.Now()
 				sec := now.Unix()

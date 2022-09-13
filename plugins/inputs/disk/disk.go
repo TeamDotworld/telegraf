@@ -4,7 +4,6 @@ package disk
 import (
 	_ "embed"
 	"fmt"
-	"strings"
 
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/plugins/inputs"
@@ -45,21 +44,21 @@ func (ds *DiskStats) Init() error {
 }
 
 func (ds *DiskStats) Gather(acc telegraf.Accumulator) error {
-	disks, partitions, err := ds.ps.DiskUsage(ds.MountPoints, ds.IgnoreMountOpts, ds.IgnoreFS)
+	disks, _, err := ds.ps.DiskUsage(ds.MountPoints, ds.IgnoreMountOpts, ds.IgnoreFS)
 	if err != nil {
 		return fmt.Errorf("error getting disk usage info: %s", err)
 	}
-	for i, du := range disks {
+	for _, du := range disks {
 		if du.Total == 0 {
 			// Skip dummy filesystem (procfs, cgroupfs, ...)
 			continue
 		}
-		mountOpts := MountOptions(partitions[i].Opts)
+		// mountOpts := MountOptions(partitions[i].Opts)
 		tags := map[string]string{
-			"path":   du.Path,
-			"device": strings.ReplaceAll(partitions[i].Device, "/dev/", ""),
-			"fstype": du.Fstype,
-			"mode":   mountOpts.Mode(),
+			"path": du.Path,
+			// "device": strings.ReplaceAll(partitions[i].Device, "/dev/", ""),
+			// "fstype": du.Fstype,
+			// "mode":   mountOpts.Mode(),
 		}
 		var usedPercent float64
 		if du.Used+du.Free > 0 {
