@@ -79,7 +79,7 @@ func GetAndroidTelemetryData() DeviceMaster {
 	}
 	metaData.Other.Kernal = runtime.GOARCH
 
-	current_time := time.Now().Format("2006-01-02 15:04:05")
+	current_time := time.Now().Format(time.RFC3339)
 	metaData.Other.DateTime = current_time
 	isRoot := VerifiPackageInstalled("su")
 	metaData.Other.Rooted = isRoot

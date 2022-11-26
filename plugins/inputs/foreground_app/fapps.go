@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"runtime"
 	"sort"
@@ -39,16 +40,18 @@ func (fapps *ForegroundApp) Gather(acc telegraf.Accumulator) error {
 	var (
 		app            string
 		is_interactive bool
-		blestate       bool
+		// blestate       bool
+		usage string
 	)
 	platform := GETPLATFORM()
 	if platform == "linux" {
 		SetEnvironment()
 		app = GetLinuxForegoundApp()
-		blestate = LinuxBleStatus()
+		// blestate = LinuxBleStatus()
 	} else if platform == "android" {
 		app = AndroidForegroundApp()
-		blestate = AndroidBleState()
+		usage = GetUsageStats(app)
+		// blestate = AndroidBleState()
 	} else if platform == "windows" {
 		if hwnd := GetWindow("GetForegroundWindow"); hwnd != 0 {
 			app = GetWindowText(HWND(hwnd))
@@ -62,12 +65,20 @@ func (fapps *ForegroundApp) Gather(acc telegraf.Accumulator) error {
 		is_interactive = false
 	}
 
-	acc.AddFields("general_info", map[string]interface{}{
+	field := map[string]interface{}{
 		"is_interactive":                 is_interactive,
 		"Current_foreground_application": app,
-		"ble_state":                      blestate,
 		"logged":                         time.Now().Format(time.RFC3339),
-	}, map[string]string{})
+		"running_time":                   usage,
+		// "ble_state":                      blestate,
+	}
+	for k, v := range field {
+		if reflect.ValueOf(v).IsZero() {
+			delete(field, k)
+		}
+	}
+
+	acc.AddFields("general_info", field, map[string]string{})
 	return nil
 }
 
@@ -245,4 +256,21 @@ func init() {
 	inputs.Add("foreground_app", func() telegraf.Input {
 		return &ForegroundApp{}
 	})
+}
+
+func GetUsageStats(appname string) string {
+	var usage string
+	getusage, err := exec.Command("dumpsys", "usagestats").Output()
+	if err != nil {
+		return ""
+	}
+	splitbyusage := strings.Split(string(getusage), "\n")
+	for _, line := range splitbyusage {
+		if strings.Contains(line, appname) && strings.Contains(line, "totalTime=") {
+			re := regexp.MustCompile(`[0-9][0-9]:[0-9][0-9]`)
+			usage = re.FindString(line)
+			break
+		}
+	}
+	return usage
 }

@@ -236,7 +236,7 @@ func GetWindowsMetaData() DeviceMaster {
 		}
 	}
 	dt := time.Now()
-	Metadata.Other.DateTime = dt.Format("01-02-2006 15:04:05")
+	Metadata.Other.DateTime = dt.Format(time.RFC3339)
 	zone, offset := time.Now().Zone()
 	Metadata.Other.TimeZone = zone + " " + strconv.Itoa(offset)
 	Metadata.Other.Rooted = amAdmin()

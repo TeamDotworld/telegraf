@@ -57,6 +57,7 @@ func Installpkg(pkg string) bool {
 	}
 	return output
 }
+
 func parse(input string) (cells []AvailableWifi, err error) {
 	lines := strings.Split(input, "\n")
 
@@ -109,7 +110,6 @@ func compare(line string, wg *sync.WaitGroup, m *sync.Mutex, cell *AvailableWifi
 				now := time.Now()
 				sec := now.Unix()
 				cell.NetworkTime = sec
-				cell.VenueName = ""
 			case "frequency":
 				if frequency, err := strconv.ParseFloat(values[i], 32); err == nil {
 					cell.Frequency = float32(frequency)
@@ -137,6 +137,8 @@ func compare(line string, wg *sync.WaitGroup, m *sync.Mutex, cell *AvailableWifi
 				if quality, err := strconv.ParseInt(values[i], 10, 32); err == nil {
 					cell.Quality = int(quality)
 				}
+			case "mode":
+				cell.VenueName = values[i]
 			}
 		}
 		m.Unlock()

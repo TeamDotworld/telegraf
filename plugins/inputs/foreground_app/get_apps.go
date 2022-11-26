@@ -86,10 +86,12 @@ func GetLinuxForegoundApp() string {
 }
 
 func AndroidForegroundApp() string {
-	var appname string
+	var (
+		appname string
+	)
 	getappname, err := exec.Command("dumpsys", "window", "windows").Output()
 	if err != nil {
-		return ""
+		return appname
 	}
 	splitline := strings.Split(string(getappname), "\n")
 	for _, line := range splitline {

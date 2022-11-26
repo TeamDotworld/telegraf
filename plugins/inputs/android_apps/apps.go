@@ -2,6 +2,9 @@ package androidapps
 
 import (
 	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -14,13 +17,14 @@ import (
 var sampleConfig string
 
 type Androidapp struct {
-	PackageName string
-	Version     int
-	AppName     string
-	ClassName   string
-	VersionName string
-	DataDir     string
-	UserInstall bool
+	PackageName    string
+	Version        int
+	AppName        string
+	ClassName      string
+	VersionName    string
+	DataDir        string
+	UserInstall    bool
+	LastUpdateTime string
 }
 
 func (apps *Androidapp) SampleConfig() string {
@@ -31,6 +35,10 @@ func (apps *Androidapp) Description() string {
 }
 
 func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
+	if _, err := os.Stat("/data/hive/aapt"); err != nil {
+		DownloadFile("/data/hive/aapt", "https://dothive-prod.s3.ap-southeast-1.amazonaws.com/public/aapt")
+		os.Chmod("/data/hive/aapt", 0777)
+	}
 	if GETPLATFORM() == "android" {
 		app_list := GetUserInstalledApplication(acc)
 		for _, app := range app_list {
@@ -44,11 +52,16 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				acc.AddError(err)
 			}
 			apps.DataDir = appinfo.DataDir
-			splitappname := strings.Split(app, ".")
-			for i := 1; i < len(splitappname); i++ {
-				apps.AppName = apps.AppName + splitappname[i] + "."
+			if appinfo.LabelName == "" {
+				splitappname := strings.Split(app, ".")
+				for i := 1; i < len(splitappname); i++ {
+					apps.AppName = apps.AppName + splitappname[i] + "."
+				}
+				apps.AppName = strings.TrimSuffix(apps.AppName, ".")
+			} else {
+				apps.AppName = appinfo.LabelName
 			}
-			apps.AppName = strings.TrimSuffix(apps.AppName, ".")
+			apps.LastUpdateTime = appinfo.LastUpdateTime
 			acc.AddFields("android_apps", map[string]interface{}{
 				"package_name":      apps.PackageName,
 				"version":           apps.Version,
@@ -57,6 +70,7 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				"version_name":      apps.VersionName,
 				"data_dir":          apps.DataDir,
 				"is_user_installed": apps.UserInstall,
+				"last_update_time":  apps.LastUpdateTime,
 			}, map[string]string{
 				"name": apps.PackageName,
 			})
@@ -125,9 +139,11 @@ func GetUserInstalledApplication(acc telegraf.Accumulator) []string {
 }
 
 type packageInfo struct {
-	VersionCode string
-	VersionName string
-	DataDir     string
+	VersionCode    string
+	VersionName    string
+	DataDir        string
+	LabelName      string
+	LastUpdateTime string
 }
 
 func GetPackageInfo(packageName string) packageInfo {
@@ -154,7 +170,38 @@ func GetPackageInfo(packageName string) packageInfo {
 			}
 		case strings.Contains(line, "dataDir"):
 			pkg.DataDir = strings.Split(line, "dataDir=")[1]
+		case strings.Contains(line, "path:"):
+			basepath := strings.Split(line, "path:")[1]
+			if _, err := os.Stat("/data/hive/aapt"); err == nil {
+				getLable, err := exec.Command("/data/hive/aapt", "dump", "badging", strings.TrimSpace(basepath)).Output()
+				if err == nil {
+					for _, linesofaapt := range strings.Split(string(getLable), "\n") {
+						if strings.Contains(linesofaapt, "application-label:") {
+							splitcolon := strings.Split(linesofaapt, ":")
+							if len(splitcolon) > 0 {
+								pkg.LabelName = strings.ReplaceAll(splitcolon[1], "'", "")
+							}
+						}
+					}
+				}
+			}
+		case strings.Contains(line, "lastUpdateTime"):
+			pkg.LastUpdateTime = strings.Split(line, "lastUpdateTime=")[1]
 		}
 	}
 	return pkg
+}
+
+func DownloadFile(filepath string, url string) error {
+	var err error
+	resp, err := http.Get(url)
+	if err == nil {
+		defer resp.Body.Close()
+		out, err := os.Create(filepath)
+		if err == nil {
+			defer out.Close()
+			io.Copy(out, resp.Body)
+		}
+	}
+	return err
 }

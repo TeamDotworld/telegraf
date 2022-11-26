@@ -133,12 +133,12 @@ func (wifi *WiFi) Gather(acc telegraf.Accumulator) error {
 	}
 	wifi.ConnectedWifiIP = GetOutboundIP().String()
 	acc.AddFields("wifi", map[string]interface{}{
-		"wifi_name":         wifi.WifiName,
-		"bssid":             wifi.BSSID,
-		"link_speed":        wifi.LinkSpeed,
-		"network_id":        wifi.NetworkID,
-		"wifi_mac":          wifi.WifiMAC,
-		"connected_wifi_ip": wifi.ConnectedWifiIP,
+		"wifi_name":   wifi.WifiName,
+		"bssid":       wifi.BSSID,
+		"link_speed":  wifi.LinkSpeed,
+		"network_id":  wifi.NetworkID,
+		"wifi_mac":    wifi.WifiMAC,
+		"outbound_ip": wifi.ConnectedWifiIP,
 	}, map[string]string{
 		"wifi": "connected",
 	})

@@ -17,7 +17,7 @@ import (
 var sampleConfig string
 
 type Temperature struct {
-	Temperature string
+	Temperature float64
 }
 
 func (e *Temperature) SampleConfig() string {
@@ -29,10 +29,9 @@ func (e *Temperature) Description() string {
 }
 
 func (temp *Temperature) Gather(acc telegraf.Accumulator) error {
-	var temperature string
 	switch GETPLATFORM() {
 	case "linux":
-		temperature = GetTemperature("cpu")
+		temp.Temperature = GetTemperature("cpu")
 	case "android":
 		tempCmd := exec.Command("cat", "/sys/class/thermal/thermal_zone0/temp")
 		tempOut, err := tempCmd.Output()
@@ -40,12 +39,11 @@ func (temp *Temperature) Gather(acc telegraf.Accumulator) error {
 			fmt.Println("failed to get cpu temperature", err)
 		}
 		temps := strings.TrimSuffix(string(tempOut), "\n")
-		temp, err := strconv.ParseFloat(temps, 64)
+		tempa, err := strconv.ParseFloat(temps, 64)
 		if err != nil {
 			fmt.Println("failed to parse cpu temperature", err)
 		}
-		temp = temp / 1000
-		temperature = strconv.FormatFloat(temp, 'f', 2, 64)
+		temp.Temperature = tempa / 1000
 	case "windows":
 		regex := `([0-9]+)`
 		re := regexp.MustCompile(regex)
@@ -57,12 +55,12 @@ func (temp *Temperature) Gather(acc telegraf.Accumulator) error {
 			gettemperatures = strings.TrimSpace(gettemperatures)
 			temperaturematch := re.FindStringSubmatch(gettemperatures)
 			if len(temperaturematch) > 0 {
-				temperature = temperaturematch[0]
+				temp.Temperature, _ = strconv.ParseFloat(strings.TrimSpace(temperaturematch[0]), 64)
 			}
 		}
 	}
 	acc.AddFields("cpu_temp", map[string]interface{}{
-		"cpu_temp": temperature,
+		"cpu_temp": temp.Temperature,
 	}, map[string]string{
 		"cpu": "temp",
 	})
@@ -112,15 +110,14 @@ func VerifyAppInstalled(pkg string) bool {
 	return output
 }
 
-func GetTemperature(needTemperature string) string {
-	var result string
+func GetTemperature(needTemperature string) float64 {
 	Thermal_Directory := "/sys/class/thermal/"
 	Thermal_Zone := "thermal_zone"
 	Thermal_Type := "type"
 	Thermal_Temp := "temp"
 	if _, err := os.Stat(Thermal_Directory); err != nil {
 		fmt.Println("failed to stat thermal directory", err)
-		return ""
+		return 0
 	}
 	readDirectory, err := ioutil.ReadDir(Thermal_Directory)
 	if err != nil {
@@ -146,18 +143,16 @@ func GetTemperature(needTemperature string) string {
 				tempFloat := float64(tempInt) / 1000
 				if needTemperature == "cpu" {
 					if strings.Contains(string(fileType), "temp") {
-						result = fmt.Sprintf("%.2f", tempFloat)
+						return tempFloat
 					}
 				} else if needTemperature == "acpi" {
 					if strings.Contains(string(fileType), "acpi") {
-						result = fmt.Sprintf("%.2f", tempFloat)
+						return tempFloat
 					}
 				}
-				if result == "" {
-					result = fmt.Sprintf("%.2f", tempFloat)
-				}
+				return tempFloat
 			}
 		}
 	}
-	return result
+	return 0
 }

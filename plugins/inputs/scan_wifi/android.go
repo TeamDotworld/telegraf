@@ -16,7 +16,7 @@ import (
 type AndroidCell struct {
 	MAC           string `json:"bssid,omitempty"`
 	Encryption    string `json:"capabilities,omitempty"`
-	Channel       int    `json:"channel_width,omitempty"`
+	Channel       string `json:"channel_width,omitempty"`
 	Frequency     string `json:"frequency,omitempty"`
 	EncryptionKey bool   `json:"is_passpoint_network,omitempty"`
 	SignalLevel   string `json:"level,omitempty"`
@@ -146,13 +146,15 @@ func andparse(input string, interfaceName string) (cells []AndroidCell, err erro
 			wificell.SignalLevel = strings.Fields(line)[1]
 		} else if strings.Contains(line, "freq:") {
 			freq := strings.Fields(line)[1]
-			freqint, err := strconv.Atoi(freq)
-			if err != nil {
-				return cells, err
+			freqint, _ := strconv.Atoi(freq)
+			if err == nil {
+				wificell.Frequency = fmt.Sprintf("%.2f", float64(freqint)/1000)
 			}
-			wificell.Frequency = fmt.Sprintf("%.2f", float64(freqint)/1000)
+
+		} else if strings.Contains(line, "primary channel:") {
+			wificell.Channel = strings.Fields(line)[1]
 		}
-		if wificell.MAC != "" && wificell.ESSID != "" && wificell.SignalLevel != "" && wificell.Frequency != "" {
+		if wificell.MAC != "" && wificell.ESSID != "" && wificell.SignalLevel != "" && wificell.Frequency != "" && wificell.Channel != "" {
 			cells = append(cells, wificell)
 			wificell = AndroidCell{}
 		}

@@ -1,6 +1,7 @@
 package scanwifi
 
 import (
+	"fmt"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -46,10 +47,10 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 				acc.AddFields("scan_wifi", map[string]interface{}{
 					"bssid":                list.MAC,
 					"capabilities":         list.Encryption,
-					"channel_width":        list.Channel,
-					"frequency":            list.Frequency,
+					"channel_width":        fmt.Sprintf("%d", list.Channel),
+					"frequency":            fmt.Sprintf("%.2f", list.Frequency),
 					"is_passpoint_network": list.EncryptionKey,
-					"level":                list.SignalLevel,
+					"level":                fmt.Sprintf("%d", list.SignalLevel),
 					"timestamp":            list.NetworkTime,
 					"venue_name":           list.VenueName,
 					"signal_quality":       list.Quality,
@@ -72,8 +73,6 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 					"is_passpoint_network": list.EncryptionKey,
 					"level":                list.SignalLevel,
 					"timestamp":            list.NetworkTime,
-					"venue_name":           list.VenueName,
-					"signal_quality":       list.Quality,
 				}, map[string]string{
 					"ssid": list.ESSID,
 				})
@@ -88,9 +87,9 @@ func (wifi *AvailableWifi) Gather(acc telegraf.Accumulator) error {
 				acc.AddFields("scan_wifi", map[string]interface{}{
 					"bssid":         list.MAC,
 					"capabilities":  list.Encryption,
-					"channel_width": list.Channel,
+					"channel_width": fmt.Sprintf("%d", list.Channel),
 					"frequency":     list.Frequency,
-					"level":         list.RSSI,
+					"level":         fmt.Sprintf("%d", list.RSSI),
 					"timestamp":     list.NetworkTime,
 				}, map[string]string{
 					"ssid": list.SSID,

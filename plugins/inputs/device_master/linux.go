@@ -82,7 +82,7 @@ func LinuxSystemMetrics() DeviceMaster {
 		}
 	}
 	all_metrics.Other.TimeZone = ReadTxtFile("/etc/timezone")
-	all_metrics.Other.DateTime = time.Now().Format("01-02-2006 15:04:05")
+	all_metrics.Other.DateTime = time.Now().Format(time.RFC3339)
 	all_metrics.Other.Language = os.Getenv("LANG")
 	host, _ := exec.Command("hostname").Output()
 	all_metrics.Other.HostName = strings.TrimSuffix(string(host), "\n")
@@ -143,18 +143,27 @@ func LinuxSystemMetrics() DeviceMaster {
 	}
 	var uname syscall.Utsname
 	if err := syscall.Uname(&uname); err == nil {
-		all_metrics.Other.OperatingSystem = int8ToStr(uname.Machine[:])
+		all_metrics.Other.OperatingSystem = getOSBit()
 	}
 	return all_metrics
 }
 
-func int8ToStr(arr []int8) string {
-	b := make([]byte, 0, len(arr))
-	for _, v := range arr {
-		if v == 0x00 {
-			break
-		}
-		b = append(b, byte(v))
+// func int8ToStr(arr []int8) string {
+// 	b := make([]byte, 0, len(arr))
+// 	for _, v := range arr {
+// 		if v == 0x00 {
+// 			break
+// 		}
+// 		b = append(b, byte(v))
+// 	}
+// 	return string(b)
+// }
+
+func getOSBit() string {
+	var result string
+	getOSbit, err := exec.Command("getconf", "LONG_BIT").Output()
+	if err != nil {
+		return strings.TrimSpace(string(getOSbit))
 	}
-	return string(b)
+	return result
 }
