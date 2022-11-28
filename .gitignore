@@ -14,3 +14,4 @@ resource.syso
 versioninfo.json
 /telegraf_arm
 /finalbuild
+/telegraf_build
