@@ -267,8 +267,17 @@ func GetUsageStats(appname string) string {
 	splitbyusage := strings.Split(string(getusage), "\n")
 	for _, line := range splitbyusage {
 		if strings.Contains(line, appname) && strings.Contains(line, "totalTime=") {
-			re := regexp.MustCompile(`[0-9][0-9]:[0-9][0-9]`)
-			usage = re.FindString(line)
+			scanner := bufio.NewScanner(strings.NewReader(line))
+			scanner.Split(bufio.ScanWords)
+			cols := make([]string, 0, 10)
+			for scanner.Scan() {
+				cols = append(cols, scanner.Text())
+			}
+			if err := scanner.Err(); err != nil {
+				return usage
+			}
+			re := regexp.MustCompile(`(([0-9])?[0-9]:)?[0-9][0-9]:[0-9][0-9]`)
+			usage = re.FindString(cols[1])
 			break
 		}
 	}

@@ -1,11 +1,13 @@
 package androidapps
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -25,6 +27,8 @@ type Androidapp struct {
 	DataDir        string
 	UserInstall    bool
 	LastUpdateTime string
+	RinningTime    string
+	LastTime       string
 }
 
 func (apps *Androidapp) SampleConfig() string {
@@ -62,6 +66,7 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				apps.AppName = appinfo.LabelName
 			}
 			apps.LastUpdateTime = appinfo.LastUpdateTime
+			apps.RinningTime, apps.LastTime = GetUsageStats(apps.PackageName)
 			acc.AddFields("android_apps", map[string]interface{}{
 				"package_name":      apps.PackageName,
 				"version":           apps.Version,
@@ -71,9 +76,12 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				"data_dir":          apps.DataDir,
 				"is_user_installed": apps.UserInstall,
 				"last_update_time":  apps.LastUpdateTime,
+				"running_time":      apps.RinningTime,
+				"last_time":         apps.LastTime,
 			}, map[string]string{
 				"name": apps.PackageName,
 			})
+			apps = &Androidapp{}
 		}
 	} else {
 		acc.AddError(fmt.Errorf("this plugin only supported on android device."))
@@ -173,13 +181,16 @@ func GetPackageInfo(packageName string) packageInfo {
 		case strings.Contains(line, "path:"):
 			basepath := strings.Split(line, "path:")[1]
 			if _, err := os.Stat("/data/hive/aapt"); err == nil {
-				getLable, err := exec.Command("/data/hive/aapt", "dump", "badging", strings.TrimSpace(basepath)).Output()
-				if err == nil {
-					for _, linesofaapt := range strings.Split(string(getLable), "\n") {
-						if strings.Contains(linesofaapt, "application-label:") {
-							splitcolon := strings.Split(linesofaapt, ":")
-							if len(splitcolon) > 0 {
-								pkg.LabelName = strings.ReplaceAll(splitcolon[1], "'", "")
+				fmt.Println(strings.TrimSpace(basepath))
+				getLable, _ := exec.Command("/data/hive/aapt", "dump", "badging", strings.TrimSpace(basepath)).Output()
+				if strings.Contains(string(getLable), "application-label:") {
+					{
+						for _, linesofaapt := range strings.Split(string(getLable), "\n") {
+							if strings.Contains(linesofaapt, "application-label:") {
+								splitcolon := strings.Split(linesofaapt, ":")
+								if len(splitcolon) > 0 {
+									pkg.LabelName = strings.ReplaceAll(splitcolon[1], "'", "")
+								}
 							}
 						}
 					}
@@ -204,4 +215,40 @@ func DownloadFile(filepath string, url string) error {
 		}
 	}
 	return err
+}
+
+func GetUsageStats(appname string) (string, string) {
+	var (
+		usage    string
+		lastTime string
+	)
+	getusage, err := exec.Command("dumpsys", "usagestats").Output()
+	if err != nil {
+		return "", ""
+	}
+	splitbyusage := strings.Split(string(getusage), "\n")
+	for _, line := range splitbyusage {
+		if strings.Contains(line, appname) && strings.Contains(line, "totalTime=") {
+			scanner := bufio.NewScanner(strings.NewReader(line))
+			scanner.Split(bufio.ScanWords)
+			cols := make([]string, 0, 10)
+			for scanner.Scan() {
+				cols = append(cols, scanner.Text())
+			}
+			if err := scanner.Err(); err != nil {
+				return usage, lastTime
+			}
+			if len(cols) < 3 {
+				break
+			}
+			re := regexp.MustCompile(`(([0-9])?[0-9]:)?[0-9][0-9]:[0-9][0-9]`)
+			usage = re.FindString(cols[1])
+			// lasttime
+			lasttemp := cols[2] + " " + cols[3]
+			reg := regexp.MustCompile(`(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})`)
+			lastTime = reg.FindString(lasttemp)
+			break
+		}
+	}
+	return usage, lastTime
 }
