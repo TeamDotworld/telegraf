@@ -115,9 +115,16 @@ func GetBattery(platform string) Battery {
 			case strings.Contains(line, "level"):
 				Battery_level, _ = strconv.Atoi(strings.TrimSpace(strings.Split(line, "level:")[1]))
 			case strings.Contains(line, "temperature"):
-				Battery_temperature = strings.Split(line, "temperature:")[1]
-			case strings.Contains(line, "voltage"):
-				Battery_voltage = strings.Split(line, "voltage:")[1]
+				temp := strings.Split(line, "temperature:")
+				if len(temp) > 0 {
+					Battery_temperature = temp[1]
+				}
+			case strings.Contains(line, "voltage") && !strings.Contains(line, "Charger") && !strings.Contains(line, "charging"):
+				volt := strings.Split(line, "voltage:")
+				fmt.Println(volt[0], len(volt))
+				if len(volt) > 0 {
+					Battery_voltage = volt[1]
+				}
 			case strings.Contains(line, "status"):
 				if strings.Contains(line, "1") {
 					Battery_status = "Unknown"
@@ -131,11 +138,14 @@ func GetBattery(platform string) Battery {
 					Battery_status = "Full"
 				}
 			case strings.Contains(line, "technology"):
-				tech := strings.TrimSpace(strings.Split(line, "technology:")[1])
-				if tech != "" {
-					Battery_technology = tech
-				} else {
-					Battery_technology = "Unknown"
+				techn := strings.Split(line, "technology:")
+				if len(techn) > 0 {
+					tech := strings.TrimSpace(techn[1])
+					if tech != "" {
+						Battery_technology = tech
+					} else {
+						Battery_technology = "Unknown"
+					}
 				}
 			case strings.Contains(line, "health"):
 				if strings.Contains(line, "1") {

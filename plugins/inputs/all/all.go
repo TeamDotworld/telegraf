@@ -221,6 +221,7 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/inputs/vsphere"
 	_ "github.com/influxdata/telegraf/plugins/inputs/webhooks"
 	_ "github.com/influxdata/telegraf/plugins/inputs/wifi"
+	_ "github.com/influxdata/telegraf/plugins/inputs/win_apps"
 	_ "github.com/influxdata/telegraf/plugins/inputs/win_eventlog"
 	_ "github.com/influxdata/telegraf/plugins/inputs/win_perf_counters"
 	_ "github.com/influxdata/telegraf/plugins/inputs/win_services"
