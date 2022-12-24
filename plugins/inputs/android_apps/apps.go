@@ -84,7 +84,7 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 			apps = &Androidapp{}
 		}
 	} else {
-		acc.AddError(fmt.Errorf("this plugin only supported on android device."))
+		acc.AddError(fmt.Errorf("this plugin only supported on android device"))
 	}
 	return nil
 }
