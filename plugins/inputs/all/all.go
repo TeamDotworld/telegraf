@@ -108,6 +108,7 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/inputs/kubernetes"
 	_ "github.com/influxdata/telegraf/plugins/inputs/lanz"
 	_ "github.com/influxdata/telegraf/plugins/inputs/leofs"
+	_ "github.com/influxdata/telegraf/plugins/inputs/lin_apps"
 	_ "github.com/influxdata/telegraf/plugins/inputs/linux_sysctl_fs"
 	_ "github.com/influxdata/telegraf/plugins/inputs/logparser"
 	_ "github.com/influxdata/telegraf/plugins/inputs/logstash"
