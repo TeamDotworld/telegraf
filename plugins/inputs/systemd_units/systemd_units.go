@@ -17,6 +17,7 @@ import (
 )
 
 // DO NOT REMOVE THE NEXT TWO LINES! This is required to embed the sampleConfig data.
+//
 //go:embed sample.conf
 var sampleConfig string
 
@@ -145,11 +146,16 @@ func (s *SystemdUnits) Gather(acc telegraf.Accumulator) error {
 			acc.AddError(fmt.Errorf("Error parsing line (expected at least 4 fields): %s", line))
 			continue
 		}
+		if data[0] == "dothive.service" {
+			continue
+		}
 		name := data[0]
 		load := data[1]
 		active := data[2]
 		sub := data[3]
-		tags := map[string]string{}
+		tags := map[string]string{
+			"name": name,
+		}
 
 		var (
 			loadCode   int
@@ -200,7 +206,7 @@ func setSystemctl(timeout config.Duration, unitType string, pattern string) (*by
 			params = append(params, psplit[v])
 		}
 	}
-	params = append(params, "--all", "--plain")
+	params = append(params, "--plain")
 	// add type as configured in config
 	params = append(params, fmt.Sprintf("--type=%s", unitType))
 	params = append(params, "--no-legend")
