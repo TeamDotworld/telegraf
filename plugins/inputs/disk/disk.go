@@ -11,6 +11,7 @@ import (
 )
 
 // DO NOT REMOVE THE NEXT TWO LINES! This is required to embed the sampleConfig data.
+//
 //go:embed sample.conf
 var sampleConfig string
 
@@ -57,7 +58,6 @@ func (ds *DiskStats) Gather(acc telegraf.Accumulator) error {
 		tags := map[string]string{
 			"path": du.Path,
 			// "device": strings.ReplaceAll(partitions[i].Device, "/dev/", ""),
-			// "fstype": du.Fstype,
 			// "mode":   mountOpts.Mode(),
 		}
 		var usedPercent float64
@@ -74,6 +74,7 @@ func (ds *DiskStats) Gather(acc telegraf.Accumulator) error {
 			"inodes_total": du.InodesTotal,
 			"inodes_free":  du.InodesFree,
 			"inodes_used":  du.InodesUsed,
+			"fs_type":      du.Fstype,
 		}
 		acc.AddGauge("disk", fields, tags)
 	}
