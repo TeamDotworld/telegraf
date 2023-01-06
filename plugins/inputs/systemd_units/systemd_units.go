@@ -148,6 +148,10 @@ func (s *SystemdUnits) Gather(acc telegraf.Accumulator) error {
 		}
 		if data[0] == "dothive.service" {
 			continue
+		} else if strings.HasPrefix(data[0], "systemd") {
+			continue
+		} else if strings.HasPrefix(data[0], "telegraf") {
+			continue
 		}
 		name := data[0]
 		load := data[1]
@@ -206,7 +210,7 @@ func setSystemctl(timeout config.Duration, unitType string, pattern string) (*by
 			params = append(params, psplit[v])
 		}
 	}
-	params = append(params, "--plain")
+	params = append(params, "--all", "--plain")
 	// add type as configured in config
 	params = append(params, fmt.Sprintf("--type=%s", unitType))
 	params = append(params, "--no-legend")

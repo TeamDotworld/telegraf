@@ -30,7 +30,6 @@ func (a *Apps) Gather(acc telegraf.Accumulator) error {
 		log.Println("Failed to get apps")
 		return err
 	}
-	// fmt.Println(string(appslist))
 	var apps []map[string]interface{}
 	err = json.Unmarshal(appslist, &apps)
 	if err != nil {

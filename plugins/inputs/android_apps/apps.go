@@ -133,14 +133,21 @@ func VerifyAppInstalled(pkg string) bool {
 
 func GetUserInstalledApplication(acc telegraf.Accumulator) []string {
 	var Apklist []string
-	getapklist, err := exec.Command("pm", "list", "packages", "-3").Output()
+	pmpath, err := exec.LookPath("pm")
 	if err != nil {
-		acc.AddError(err)
+		pmpath = "/system/bin/pm"
+		acc.AddError(fmt.Errorf("lookup path error %v", err))
+	}
+	getapklist, err := exec.Command(pmpath, "list", "packages", "-3").Output()
+	if err != nil {
+		acc.AddError(fmt.Errorf("pm list package err in %v", err))
 	}
 	splitline := strings.Split(string(getapklist), "\n")
-	for _, line := range splitline {
-		if strings.Contains(line, "package:") {
-			Apklist = append(Apklist, strings.Split(line, "package:")[1])
+	if len(splitline) > 0 {
+		for _, line := range splitline {
+			if strings.Contains(line, "package:") {
+				Apklist = append(Apklist, strings.Split(line, "package:")[1])
+			}
 		}
 	}
 	return Apklist
@@ -181,7 +188,6 @@ func GetPackageInfo(packageName string) packageInfo {
 		case strings.Contains(line, "path:"):
 			basepath := strings.Split(line, "path:")[1]
 			if _, err := os.Stat("/data/hive/aapt"); err == nil {
-				fmt.Println(strings.TrimSpace(basepath))
 				getLable, _ := exec.Command("/data/hive/aapt", "dump", "badging", strings.TrimSpace(basepath)).Output()
 				if strings.Contains(string(getLable), "application-label:") {
 					{

@@ -121,7 +121,6 @@ func GetBattery(platform string) Battery {
 				}
 			case strings.Contains(line, "voltage") && !strings.Contains(line, "Charger") && !strings.Contains(line, "charging"):
 				volt := strings.Split(line, "voltage:")
-				fmt.Println(volt[0], len(volt))
 				if len(volt) > 0 {
 					Battery_voltage = volt[1]
 				}
