@@ -24,7 +24,7 @@ require (
 	github.com/Shopify/sarama v1.36.0
 	github.com/aerospike/aerospike-client-go/v5 v5.9.0
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15
-	github.com/aliyun/alibaba-cloud-sdk-go v1.61.1727
+	github.com/aliyun/alibaba-cloud-sdk-go v1.62.123
 	github.com/amir/raidman v0.0.0-20170415203553-1ccc43bfb9c9
 	github.com/antchfx/jsonquery v1.3.0
 	github.com/antchfx/xmlquery v1.3.12
@@ -124,7 +124,7 @@ require (
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/olivere/elastic v6.2.37+incompatible
 	github.com/openconfig/gnmi v0.0.0-20200617225440-d2b4e6a45802
-	github.com/opentracing/opentracing-go v1.2.0
+	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b
 	github.com/openzipkin-contrib/zipkin-go-opentracing v0.4.5
 	github.com/openzipkin/zipkin-go v0.2.5
 	github.com/pborman/ansi v1.0.0
@@ -181,9 +181,9 @@ require (
 	gopkg.in/olivere/elastic.v5 v5.0.86
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/api v0.25.0
-	k8s.io/apimachinery v0.25.0
-	k8s.io/client-go v0.25.0
+	k8s.io/api v0.25.0-alpha.2
+	k8s.io/apimachinery v0.25.0-alpha.2
+	k8s.io/client-go v0.25.0-alpha.2
 	modernc.org/sqlite v1.17.3
 )
 
@@ -412,7 +412,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	honnef.co/go/tools v0.2.2 // indirect
 	k8s.io/klog/v2 v2.70.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20220803164354-a70c9af30aea // indirect
+	k8s.io/kube-openapi v0.0.0-20220603121420-31174f50af60 // indirect
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed // indirect
 	lukechampine.com/uint128 v1.1.1 // indirect
 	modernc.org/cc/v3 v3.36.0 // indirect
