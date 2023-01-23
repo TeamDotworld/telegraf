@@ -93,11 +93,13 @@ func (master *DeviceMaster) Gather(acc telegraf.Accumulator) error {
 	var result DeviceMaster
 	switch platform {
 	case "linux":
-		result = LinuxSystemMetrics()
+		result = SystemMetrics()
 	case "android":
 		result = GetAndroidTelemetryData()
 	case "windows":
 		result = GetWindowsMetaData()
+	case "darwin":
+		result = SystemMetrics()
 	}
 	acc.AddFields("system_metrics", map[string]interface{}{
 		"bios_date":           result.Bios.BiosDate,
@@ -150,7 +152,6 @@ func init() {
 		return &DeviceMaster{}
 	})
 }
-
 func ReadTxtFile(path string) string {
 	file, err := os.Open(path)
 	if err != nil {
@@ -185,6 +186,8 @@ func GETPLATFORM() string {
 		}
 	} else if runtime.GOOS == "windows" {
 		OS_TYPE = "windows"
+	} else {
+		OS_TYPE = runtime.GOOS
 	}
 	return OS_TYPE
 }

@@ -418,7 +418,8 @@ func (a *Agent) testRunInputs(
 					nulAcc.AddError(err)
 				}
 
-				time.Sleep(500 * time.Millisecond)
+				// fmt.Println("Wait")
+				// time.Sleep(500 * time.Millisecond)
 			}
 
 			acc := NewAccumulator(input, unit.dst)
@@ -430,7 +431,6 @@ func (a *Agent) testRunInputs(
 		}(input)
 	}
 	wg.Wait()
-
 	internal.SleepContext(ctx, wait)
 
 	log.Printf("D! [agent] Stopping service inputs")

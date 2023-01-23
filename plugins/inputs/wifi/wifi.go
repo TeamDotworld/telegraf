@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/influxdata/telegraf"
 	"github.com/influxdata/telegraf/plugins/inputs"
@@ -76,32 +77,44 @@ func (wifi *WiFi) Gather(acc telegraf.Accumulator) error {
 		wname, _ := exec.Command("iwgetid", "--raw").Output()
 		wifi.WifiName = strings.TrimSuffix(string(wname), "\n")
 		iface := GetInterface()
-		ifas, _ := net.Interfaces()
-		for _, ifa := range ifas {
-			if ifa.Name == iface {
-				wifi.WifiMAC = ifa.HardwareAddr.String()
+		var wg sync.WaitGroup
+		wg.Add(3)
+		go func() {
+			defer wg.Done()
+			ifas, _ := net.Interfaces()
+			for _, ifa := range ifas {
+				if ifa.Name == iface {
+					wifi.WifiMAC = ifa.HardwareAddr.String()
+				}
 			}
-		}
+		}()
+		go func() {
+			defer wg.Done()
+			// Access Point MAC Address
+			bssid, err := exec.Command("iwgetid", "-a").Output()
+			if err != nil {
+				wifi.BSSID = ""
+			} else {
+				reg_mac := regexp.MustCompile(`[0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}`)
+				wifi.BSSID = reg_mac.FindString(string(bssid))
+			}
+		}()
+		go func() {
+			defer wg.Done()
+			iwconfig, err := exec.Command("iwconfig", iface).Output()
+			if err != nil {
+				fmt.Println("Error of get iwconfig: ", err)
+			}
+			// reg for Signal level=
+			reg := "Signal level=-?[0-9]+"
+			mustc := regexp.MustCompile(reg)
+			match := mustc.FindAllString(string(iwconfig), -1)
+			if len(match) > 0 {
+				wifi.LinkSpeed = match[0][len("Signal level="):]
+			}
+		}()
+		wg.Wait()
 		wifi.NetworkID = ReadTxtFile("/sys/class/net/" + iface + "/netdev_group")
-		// Access Point MAC Address
-		bssid, err := exec.Command("iwgetid", "-a").Output()
-		if err != nil {
-			wifi.BSSID = ""
-		} else {
-			reg_mac := regexp.MustCompile(`[0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}[:-][0-9a-fA-F]{2}`)
-			wifi.BSSID = reg_mac.FindString(string(bssid))
-		}
-		iwconfig, err := exec.Command("iwconfig", iface).Output()
-		if err != nil {
-			fmt.Println("Error of get iwconfig: ", err)
-		}
-		// reg for Signal level=
-		reg := "Signal level=-?[0-9]+"
-		mustc := regexp.MustCompile(reg)
-		match := mustc.FindAllString(string(iwconfig), -1)
-		if len(match) > 0 {
-			wifi.LinkSpeed = match[0][len("Signal level="):]
-		}
 	} else if platform == "windows" {
 		getinterfaces, err := exec.Command("netsh", "wlan", "show", "interfaces").Output()
 		if err != nil {

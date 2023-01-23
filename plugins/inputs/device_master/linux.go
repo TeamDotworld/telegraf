@@ -22,7 +22,7 @@ var (
 	LinuxProcsPath = "/proc/device-tree/"
 )
 
-func LinuxSystemMetrics() DeviceMaster {
+func SystemMetrics() DeviceMaster {
 	var all_metrics DeviceMaster
 	if _, err := os.Stat(LinuxDMIPath); !os.IsNotExist(err) {
 		DMIRead, err := ioutil.ReadDir(LinuxDMIPath)
