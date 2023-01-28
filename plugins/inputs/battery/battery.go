@@ -38,17 +38,26 @@ func (battery *Battery) Description() string {
 func (battery *Battery) Gather(acc telegraf.Accumulator) error {
 	platform := GETPLATFORM()
 	batteries := GetBattery(platform)
+	switch platform {
+	case "darwin":
+		acc.AddFields("battery",
+			map[string]interface{}{
+				"level":  batteries.Level,
+				"status": batteries.Status,
+			}, map[string]string{})
+	default:
+		acc.AddFields("battery",
+			map[string]interface{}{
+				"health":      batteries.Health,
+				"level":       batteries.Level,
+				"plugged":     batteries.Plugged,
+				"status":      batteries.Status,
+				"technology":  batteries.Technology,
+				"temperature": batteries.Temperature,
+				"voltage":     batteries.Voltage,
+			}, map[string]string{})
+	}
 
-	acc.AddFields("battery",
-		map[string]interface{}{
-			"health":      batteries.Health,
-			"level":       batteries.Level,
-			"plugged":     batteries.Plugged,
-			"status":      batteries.Status,
-			"technology":  batteries.Technology,
-			"temperature": batteries.Temperature,
-			"voltage":     batteries.Voltage,
-		}, map[string]string{})
 	return nil
 }
 
