@@ -337,3 +337,7 @@ func GetWin32DesktopMonitor() []Win32_DesktopMonitor {
 func LinuxSystemMetrics() DeviceMaster {
 	return DeviceMaster{}
 }
+
+func SystemMetrics() DeviceMaster {
+	return DeviceMaster{}
+}

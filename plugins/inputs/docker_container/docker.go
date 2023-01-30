@@ -2,6 +2,7 @@ package docker_container
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -63,7 +64,11 @@ func (e *DockerContainer) Gather(acc telegraf.Accumulator) error {
 				Mounts                string
 				ImageName             string
 				Version               string
+				CpuShares             int
+				CpusetCpus            string
+				RestartPolicy         string
 			)
+
 			for _, contmounts := range containerss {
 				if s.Container == contmounts.ID[:12] {
 					Status = contmounts.Status
@@ -85,6 +90,19 @@ func (e *DockerContainer) Gather(acc telegraf.Accumulator) error {
 						ImageName = contmounts.Image
 						Version = "latest"
 					}
+					_, containerDetails, err := cli.ContainerInspectWithRaw(context.Background(), contmounts.ID, true)
+					if err != nil {
+						acc.AddError(err)
+					}
+
+					var inspect Dockerinspect
+					err = json.Unmarshal(containerDetails, &inspect)
+					if err != nil {
+						acc.AddError(err)
+					}
+					CpuShares = inspect.HostConfig.CpuShares
+					CpusetCpus = inspect.HostConfig.CpusetCpus
+					RestartPolicy = inspect.HostConfig.RestartPolicy.Name
 				}
 			}
 			acc.AddFields("docker_container", map[string]interface{}{
@@ -103,9 +121,13 @@ func (e *DockerContainer) Gather(acc telegraf.Accumulator) error {
 				"created":        Created,
 				"network_mode":   HostConfigNetworkMode,
 				"state":          State,
-				"data_dir":       Mounts,
+				"mounts":         Mounts,
 				"package_name":   ImageName,
 				"version":        Version,
+				"pids_limit":     s.PIDs,
+				"cpu_shares":     CpuShares,
+				"cpu_set_cpus":   CpusetCpus,
+				"restart_policy": RestartPolicy,
 			}, map[string]string{
 				"name": s.Name,
 			})

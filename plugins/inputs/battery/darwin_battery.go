@@ -51,6 +51,9 @@ func GetBattery(platform string) Battery {
 			batt.Status = "Unknown"
 		}
 	}
+	if batt.Status == "Empty" || batt.Level == 0 {
+		return Battery{}
+	}
 
 	return batt
 }
