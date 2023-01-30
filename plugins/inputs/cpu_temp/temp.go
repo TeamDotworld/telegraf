@@ -58,12 +58,20 @@ func (temp *Temperature) Gather(acc telegraf.Accumulator) error {
 				temp.Temperature, _ = strconv.ParseFloat(strings.TrimSpace(temperaturematch[0]), 64)
 			}
 		}
+	case "darwin":
+		f, err := strconv.ParseFloat(GetCPUtemp(), 64)
+		if err != nil {
+			acc.AddError(err)
+		}
+		temp.Temperature = f
 	}
-	acc.AddFields("cpu_temp", map[string]interface{}{
-		"cpu_temp": temp.Temperature,
-	}, map[string]string{
-		"cpu": "temp",
-	})
+	if temp.Temperature > 0 {
+		acc.AddFields("cpu_temp", map[string]interface{}{
+			"cpu_temp": temp.Temperature,
+		}, map[string]string{
+			"cpu": "temp",
+		})
+	}
 	return nil
 }
 
@@ -90,8 +98,8 @@ func GETPLATFORM() string {
 				OS_TYPE = "linux"
 			}
 		}
-	} else if runtime.GOOS == "windows" {
-		OS_TYPE = "windows"
+	} else {
+		OS_TYPE = runtime.GOOS
 	}
 	return OS_TYPE
 }
