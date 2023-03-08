@@ -48,8 +48,8 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 		for _, app := range app_list {
 			var err error
 			apps.PackageName = app
-			apps.UserInstall = true
 			appinfo := GetPackageInfo(app)
+			apps.UserInstall = appinfo.IsUserInstalled
 			apps.VersionName = appinfo.VersionName
 			apps.Version, err = strconv.Atoi(appinfo.VersionCode)
 			if err != nil {
@@ -61,7 +61,11 @@ func (apps *Androidapp) Gather(acc telegraf.Accumulator) error {
 				for i := 1; i < len(splitappname); i++ {
 					apps.AppName = apps.AppName + splitappname[i] + "."
 				}
-				apps.AppName = strings.TrimSuffix(apps.AppName, ".")
+				name := strings.TrimSuffix(apps.AppName, ".")
+				if name == "" {
+					name = app
+				}
+				apps.AppName = name
 			} else {
 				apps.AppName = appinfo.LabelName
 			}
@@ -138,13 +142,16 @@ func GetUserInstalledApplication(acc telegraf.Accumulator) []string {
 		pmpath = "/system/bin/pm"
 		acc.AddError(fmt.Errorf("lookup path error %v", err))
 	}
-	getapklist, err := exec.Command(pmpath, "list", "packages", "-3").Output()
+	getapklist, err := exec.Command(pmpath, "list", "packages").Output()
 	if err != nil {
 		acc.AddError(fmt.Errorf("pm list package err in %v", err))
 	}
 	splitline := strings.Split(string(getapklist), "\n")
 	if len(splitline) > 0 {
 		for _, line := range splitline {
+			if strings.Contains(line, "jp.co.cyberagent.stf.rotationwatcher") {
+				continue
+			}
 			if strings.Contains(line, "package:") {
 				Apklist = append(Apklist, strings.Split(line, "package:")[1])
 			}
@@ -154,11 +161,12 @@ func GetUserInstalledApplication(acc telegraf.Accumulator) []string {
 }
 
 type packageInfo struct {
-	VersionCode    string
-	VersionName    string
-	DataDir        string
-	LabelName      string
-	LastUpdateTime string
+	VersionCode     string
+	VersionName     string
+	DataDir         string
+	LabelName       string
+	LastUpdateTime  string
+	IsUserInstalled bool
 }
 
 func GetPackageInfo(packageName string) packageInfo {
@@ -187,6 +195,9 @@ func GetPackageInfo(packageName string) packageInfo {
 			pkg.DataDir = strings.Split(line, "dataDir=")[1]
 		case strings.Contains(line, "path:"):
 			basepath := strings.Split(line, "path:")[1]
+			if !strings.Contains(basepath, "/system") {
+				pkg.IsUserInstalled = true
+			}
 			if _, err := os.Stat("/data/hive/aapt"); err == nil {
 				getLable, _ := exec.Command("/data/hive/aapt", "dump", "badging", strings.TrimSpace(basepath)).Output()
 				if strings.Contains(string(getLable), "application-label:") {

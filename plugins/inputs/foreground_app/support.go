@@ -2,13 +2,12 @@ package foreground_app
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
-	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -16,33 +15,52 @@ func SetEnvironment() {
 	if runtime.GOOS == "linux" {
 		MonitorNumber := GetMonitors()
 		if len(MonitorNumber) > 0 {
-			os.Setenv("DISPLAY", ":"+strconv.Itoa(MonitorNumber[0]))
-			if MonitorNumber[0] == 5 {
+			os.Setenv("DISPLAY", MonitorNumber[0])
+			if MonitorNumber[0] == "5" {
 				os.Setenv("XAUTHORITY", "/home/dothive/.Xauthority")
 			} else {
-				homeuser := GetHomeUsers()
+				homeuser := GetCurrentHomeUser()
 				os.Setenv("XAUTHORITY", "/home/"+homeuser+"/.Xauthority")
 			}
 		}
 	}
 }
 
-func GetHomeUsers() string {
+func GetCurrentHomeUser() string {
 	var userName string
-	execHome, err := exec.Command("ls", "/home").Output()
+	getCurrentUser, _, err := RunCommand("w", "", "-s", "-h")
 	if err != nil {
 		return ""
 	}
-	split := strings.Split(string(execHome), "\n")
-	for _, name := range split {
-		if !strings.Contains(name, "dwmdm") {
-			if CheckUser(name) {
-				userName = name
-				break
-			}
-		}
+	spl := strings.Split(getCurrentUser, "\n")
+	if len(spl) > 0 {
+		splspace := strings.Split(spl[0], " ")
+		userName = strings.TrimSpace(splspace[0])
 	}
 	return userName
+}
+func RunCommand(command string, dir string, args ...string) (string, string, error) {
+	// Create buffers for stdout and stderr
+	var (
+		stdout bytes.Buffer
+		stderr bytes.Buffer
+	)
+	// Create command
+	cmd := exec.Command(command, args...)
+	// Set stdout and stderr
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	// Set directory if given
+	if dir != "" {
+		cmd.Dir = dir
+	}
+	// Run command
+	err := cmd.Run()
+	if err != nil || stderr.String() != "" {
+		return stdout.String(), stderr.String(), err
+	}
+	// Return stdout, stderr, and error
+	return stdout.String(), stderr.String(), err
 }
 
 func CheckUser(userCheck string) bool {
@@ -87,26 +105,17 @@ func CheckUser(userCheck string) bool {
 	return usernameUser
 }
 
-func GetMonitors() []int {
-	var MonitorNumber []int
+func GetMonitors() []string {
+	var MonitorNumber []string
 	if _, err := os.Stat("/tmp/.X11-unix"); err == nil {
-		xradr, err := exec.Command("ls", "/tmp/.X11-unix").Output()
+		dir, err := os.ReadDir("/tmp/.X11-unix")
 		if err != nil {
 			return MonitorNumber
 		}
-		xradrs := strings.ReplaceAll(string(xradr), "\n", "")
-		xrandr := strings.ReplaceAll(xradrs, "X", ":")
-		totaldisplay := strings.Split(xrandr, ":")
-		for _, v := range totaldisplay {
-			if v != "" {
-				convInt, err := strconv.Atoi(v)
-				if err != nil {
-					return MonitorNumber
-				}
-				MonitorNumber = append(MonitorNumber, convInt)
-			}
+		for _, file := range dir {
+			monitorcnt := strings.ReplaceAll(file.Name(), "X", ":")
+			MonitorNumber = append(MonitorNumber, monitorcnt)
 		}
-		sort.Ints(MonitorNumber)
 	}
 	return MonitorNumber
 }

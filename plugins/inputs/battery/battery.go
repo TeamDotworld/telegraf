@@ -57,7 +57,6 @@ func (battery *Battery) Gather(acc telegraf.Accumulator) error {
 				"voltage":     batteries.Voltage,
 			}, map[string]string{})
 	}
-
 	return nil
 }
 
