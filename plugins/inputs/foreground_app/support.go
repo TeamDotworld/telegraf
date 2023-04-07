@@ -3,6 +3,7 @@ package foreground_app
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
@@ -30,6 +31,7 @@ func GetCurrentHomeUser() string {
 	var userName string
 	getCurrentUser, _, err := RunCommand("w", "", "-s", "-h")
 	if err != nil {
+		fmt.Println("Failed to get current user", err, getCurrentUser)
 		return ""
 	}
 	spl := strings.Split(getCurrentUser, "\n")
@@ -37,8 +39,67 @@ func GetCurrentHomeUser() string {
 		splspace := strings.Split(spl[0], " ")
 		userName = strings.TrimSpace(splspace[0])
 	}
+	if userName == "" {
+		execHome, err := exec.Command("ls", "/home").Output()
+		if err != nil {
+			fmt.Println("failed to get home dir", err)
+		}
+		split := strings.Split(string(execHome), "\n")
+		for _, name := range split {
+			if !strings.Contains(name, "dothive") && !strings.Contains(name, "dwmdm") {
+				if GetUser(name) {
+					userName = name
+					break
+				}
+			}
+		}
+	}
 	return userName
 }
+func GetUser(userCheck string) bool {
+	var usernameUser bool
+	var Users []string
+	file, err := os.Open("/etc/passwd")
+	if err != nil {
+		fmt.Println("Error opening file", err)
+		return false
+	}
+	defer file.Close()
+	reader := bufio.NewReader(file)
+	for {
+		line, err := reader.ReadString('\n')
+		// skip all line starting with #
+		if equal := strings.Index(line, "#"); equal < 0 {
+			// get the username and description
+			lineSlice := strings.FieldsFunc(line, func(divide rune) bool {
+				return divide == ':' // we divide at colon
+			})
+
+			if len(lineSlice) > 0 {
+				Users = append(Users, lineSlice[0])
+			}
+
+		}
+
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			fmt.Println("Error reading file", err)
+			break
+		}
+	}
+	for _, name := range Users {
+		if strings.Contains(name, userCheck) {
+			usernameUser = true
+			break
+		} else {
+			usernameUser = false
+		}
+	}
+	return usernameUser
+}
+
 func RunCommand(command string, dir string, args ...string) (string, string, error) {
 	// Create buffers for stdout and stderr
 	var (

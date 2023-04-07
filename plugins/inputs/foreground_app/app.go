@@ -47,6 +47,7 @@ func (fapps *ForegroundApp) Gather(acc telegraf.Accumulator) error {
 		is_interactive = true
 	} else {
 		is_interactive = false
+		app = "none"
 	}
 
 	field := map[string]interface{}{

@@ -145,6 +145,11 @@ func GetUserInstalledApplication(acc telegraf.Accumulator) []string {
 	getapklist, err := exec.Command(pmpath, "list", "packages").Output()
 	if err != nil {
 		acc.AddError(fmt.Errorf("pm list package err in %v", err))
+		acc.AddError(fmt.Errorf("trying to get sh"))
+		getapklist, err = exec.Command("/system/bin/sh", pmpath, "list", "packages").Output()
+		if err != nil {
+			acc.AddError(fmt.Errorf("failed to getting pkg also an sh"))
+		}
 	}
 	splitline := strings.Split(string(getapklist), "\n")
 	if len(splitline) > 0 {
